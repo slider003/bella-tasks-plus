@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, profile, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  // Get display name from profile or fallback to email
+  const displayName = profile?.name || user?.email?.split('@')[0] || "User";
 
   return (
     <header className="border-b py-4">
@@ -57,7 +60,7 @@ const Navigation = () => {
               </Link>
               <div className="flex items-center space-x-4">
                 <span className="text-sm font-medium">
-                  Hello, {user?.name || "User"}
+                  Hello, {displayName}
                 </span>
                 <Button variant="outline" onClick={logout}>
                   Logout
@@ -106,7 +109,7 @@ const Navigation = () => {
                   </Link>
                   <div className="flex flex-col space-y-4 pt-4 border-t">
                     <span className="text-muted-foreground">
-                      Signed in as {user?.name || "User"}
+                      Signed in as {displayName}
                     </span>
                     <Button variant="outline" onClick={() => {
                       logout();
