@@ -5,92 +5,205 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Todo {
   id: string;
   task: string;
   completed: boolean;
-  createdAt: Date;
+  created_at: string;
 }
 
 const TodoList = () => {
-  const [todos, setTodos] = useState<Todo[]>(() => {
-    const saved = localStorage.getItem("todos");
-    if (saved) {
-      try {
-        return JSON.parse(saved).map((todo: any) => ({
-          ...todo,
-          createdAt: new Date(todo.createdAt)
-        }));
-      } catch (e) {
-        console.error("Failed to parse saved todos", e);
-        return [];
-      }
-    }
-    return [];
-  });
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [newTask, setNewTask] = useState("");
   const [editTask, setEditTask] = useState<{ id: string; task: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
+  // Fetch todos from Supabase
   useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  }, [todos]);
+    const fetchTodos = async () => {
+      if (!isAuthenticated || !user) {
+        setTodos([]);
+        setIsLoading(false);
+        return;
+      }
 
-  const addTodo = () => {
-    if (newTask.trim()) {
-      const newTodo: Todo = {
-        id: Date.now().toString(),
-        task: newTask.trim(),
-        completed: false,
-        createdAt: new Date()
+      try {
+        const { data, error } = await supabase
+          .from('todos')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          toast({
+            title: "Error fetching todos",
+            description: error.message,
+            variant: "destructive",
+          });
+          console.error("Error fetching todos:", error);
+          return;
+        }
+
+        setTodos(data || []);
+      } catch (error) {
+        console.error("Failed to fetch todos:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTodos();
+    
+    // Set up realtime subscription
+    if (isAuthenticated && user) {
+      const channel = supabase
+        .channel('todos-changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'todos', filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            console.log('Realtime update:', payload);
+            // Refresh todos to get latest data
+            fetchTodos();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
       };
-      setTodos([...todos, newTodo]);
+    }
+  }, [isAuthenticated, user, toast]);
+
+  const addTodo = async () => {
+    if (!newTask.trim() || !user) return;
+
+    try {
+      const newTodo = {
+        task: newTask.trim(),
+        user_id: user.id,
+        completed: false
+      };
+
+      const { error } = await supabase
+        .from('todos')
+        .insert(newTodo);
+
+      if (error) {
+        toast({
+          title: "Failed to add task",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       setNewTask("");
       toast({
         title: "Task added",
         description: "Your new task has been added to the list."
       });
+    } catch (error) {
+      console.error("Error adding todo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add task. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const toggleComplete = (id: string) => {
-    setTodos(
-      todos.map(todo => {
-        if (todo.id === id) {
-          return { ...todo, completed: !todo.completed };
-        }
-        return todo;
-      })
-    );
+  const toggleComplete = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('todos')
+        .update({ completed: !currentStatus })
+        .eq('id', id);
+
+      if (error) {
+        toast({
+          title: "Error updating task",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error toggling todo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteTodo = (id: string) => {
-    setTodos(todos.filter(todo => todo.id !== id));
-    toast({
-      title: "Task deleted",
-      description: "The task has been removed from your list."
-    });
+  const deleteTodo = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('todos')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast({
+          title: "Error deleting task",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Task deleted",
+        description: "The task has been removed from your list."
+      });
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete task. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const startEdit = (todo: Todo) => {
     setEditTask({ id: todo.id, task: todo.task });
   };
 
-  const updateTodo = () => {
-    if (editTask && editTask.task.trim()) {
-      setTodos(
-        todos.map(todo => {
-          if (todo.id === editTask.id) {
-            return { ...todo, task: editTask.task.trim() };
-          }
-          return todo;
-        })
-      );
+  const updateTodo = async () => {
+    if (!editTask || !editTask.task.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('todos')
+        .update({ task: editTask.task.trim() })
+        .eq('id', editTask.id);
+
+      if (error) {
+        toast({
+          title: "Error updating task",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       setEditTask(null);
       toast({
         title: "Task updated",
         description: "Your task has been updated successfully."
+      });
+    } catch (error) {
+      console.error("Error updating todo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -100,6 +213,16 @@ const TodoList = () => {
       action();
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <Card className="elegant-card w-full">
+        <CardContent className="p-6 flex flex-col items-center text-center">
+          <p className="mb-4">Please login to manage your tasks.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="elegant-card w-full">
@@ -124,7 +247,12 @@ const TodoList = () => {
           </Button>
         </div>
 
-        {todos.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading your tasks...</p>
+          </div>
+        ) : todos.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <p>You have no tasks. Add one to get started!</p>
           </div>
@@ -158,7 +286,7 @@ const TodoList = () => {
                         className={`h-6 w-6 rounded-full transition-colors ${
                           todo.completed ? "bg-primary/20 text-primary border-primary/30" : "bg-secondary border-secondary"
                         }`}
-                        onClick={() => toggleComplete(todo.id)}
+                        onClick={() => toggleComplete(todo.id, todo.completed)}
                       >
                         {todo.completed && <Check size={14} />}
                       </Button>
