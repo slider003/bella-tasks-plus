@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { useAuth } from "@/contexts/AuthContext";
+
 const Index = () => {
   const {
     isAuthenticated
@@ -153,7 +154,7 @@ const Index = () => {
             </div>
             
             <div className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Elegant Tasks. All rights reserved.
+              &copy; {new Date().getFullYear()} <a href="https://thebellamarketplace.com/" target="_blank" rel="noopener noreferrer" className="hover:underline">Bella Tasks</a>. All rights reserved.
             </div>
           </div>
         </div>
