@@ -66,8 +66,25 @@ const TodoList = () => {
           { event: '*', schema: 'public', table: 'todos', filter: `user_id=eq.${user.id}` },
           (payload) => {
             console.log('Realtime update:', payload);
-            // Refresh todos to get latest data
-            fetchTodos();
+            
+            // Handle different events
+            if (payload.eventType === 'INSERT') {
+              const newTodo = payload.new as Todo;
+              setTodos(currentTodos => [newTodo, ...currentTodos]);
+            } else if (payload.eventType === 'UPDATE') {
+              const updatedTodo = payload.new as Todo;
+              setTodos(currentTodos => 
+                currentTodos.map(todo => todo.id === updatedTodo.id ? updatedTodo : todo)
+              );
+            } else if (payload.eventType === 'DELETE') {
+              const deletedTodo = payload.old as Todo;
+              setTodos(currentTodos => 
+                currentTodos.filter(todo => todo.id !== deletedTodo.id)
+              );
+            } else {
+              // Fallback to refetching all todos if we cannot handle the event
+              fetchTodos();
+            }
           }
         )
         .subscribe();

@@ -4,8 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { InfoCircle } from "lucide-react";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -13,6 +15,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
   const { register } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -39,13 +42,43 @@ const Register = () => {
     try {
       setIsLoading(true);
       await register(email, password, name);
-      navigate("/dashboard");
+      setShowVerification(true);
     } catch (error) {
       console.error("Registration error:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (showVerification) {
+    return (
+      <Card className="elegant-card w-full">
+        <CardHeader>
+          <CardTitle className="text-2xl font-serif">Check Your Email</CardTitle>
+          <CardDescription>We've sent you a verification email</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert className="bg-blue-50 border-blue-200">
+            <InfoCircle className="h-4 w-4 text-blue-500" />
+            <AlertTitle>Verify your email address</AlertTitle>
+            <AlertDescription>
+              We've sent a verification email to <strong>{email}</strong>. Please check your inbox and click the verification link to complete your registration.
+            </AlertDescription>
+          </Alert>
+          <div className="text-center space-y-4 mt-4">
+            <p className="text-muted-foreground">After verification, you can log in to your account.</p>
+            <Button 
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/login")}
+            >
+              Go to Login
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="elegant-card w-full">
