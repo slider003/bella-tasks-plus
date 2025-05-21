@@ -1,15 +1,13 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { useAuth } from "@/contexts/AuthContext";
-
 const Index = () => {
-  const { isAuthenticated } = useAuth();
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  const {
+    isAuthenticated
+  } = useAuth();
+  return <div className="min-h-screen flex flex-col">
       <Navigation />
       
       <main className="flex-1">
@@ -24,14 +22,11 @@ const Index = () => {
                   A beautifully designed todo application that helps you focus on what matters most
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  {isAuthenticated ? (
-                    <Link to="/dashboard">
+                  {isAuthenticated ? <Link to="/dashboard">
                       <Button className="elegant-button text-base px-8 py-6">
                         Go to Dashboard
                       </Button>
-                    </Link>
-                  ) : (
-                    <>
+                    </Link> : <>
                       <Link to="/register">
                         <Button className="elegant-button text-base px-8 py-6">
                           Get Started
@@ -42,8 +37,7 @@ const Index = () => {
                           Sign In
                         </Button>
                       </Link>
-                    </>
-                  )}
+                    </>}
                 </div>
               </div>
               
@@ -81,7 +75,7 @@ const Index = () => {
 
         <section className="py-16 bg-muted">
           <div className="container text-center">
-            <h2 className="text-3xl md:text-4xl font-serif font-medium mb-12">Why Elegant Tasks?</h2>
+            <h2 className="text-3xl md:text-4xl font-serif font-medium mb-12">Why Bella Tasks?</h2>
             
             <div className="grid md:grid-cols-3 gap-8">
               <Card className="elegant-card">
@@ -136,19 +130,15 @@ const Index = () => {
             </p>
             
             <div className="flex justify-center">
-              {isAuthenticated ? (
-                <Link to="/dashboard">
+              {isAuthenticated ? <Link to="/dashboard">
                   <Button className="elegant-button text-lg px-8 py-6">
                     Go to Dashboard
                   </Button>
-                </Link>
-              ) : (
-                <Link to="/register">
+                </Link> : <Link to="/register">
                   <Button className="elegant-button text-lg px-8 py-6">
                     Create Your Free Account
                   </Button>
-                </Link>
-              )}
+                </Link>}
             </div>
           </div>
         </section>
@@ -168,8 +158,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
