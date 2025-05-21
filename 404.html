@@ -5,17 +5,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="refresh" content="0; url=/bella-tasks-plus/" />
+    <meta http-equiv="refresh" content="0; url=/" />
     <script>
-      // If JS is enabled, redirect to the root with the correct hash
-      var l = window.location;
-      var repo = '/bella-tasks-plus';
-      var path = l.pathname.replace(repo, '');
-      window.location.replace(repo + '/#' + path + l.search + l.hash);
+      // If JS is enabled, redirect all 404s to index.html for SPA routing
+      var path = window.location.pathname + window.location.search + window.location.hash;
+      window.location.replace('/#' + path.replace(/^\//, ''));
     </script>
   </head>
   <body>
     <h1>Redirecting...</h1>
-    <p>If you are not redirected, <a href="/bella-tasks-plus/">click here</a>.</p>
+    <p>If you are not redirected, <a href="/">click here</a>.</p>
   </body>
 </html>
