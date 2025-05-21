@@ -36,6 +36,7 @@ const TodoList = () => {
         const { data, error } = await supabase
           .from('todos')
           .select('*')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -65,7 +66,7 @@ const TodoList = () => {
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'todos', filter: `user_id=eq.${user.id}` },
           (payload) => {
-            console.log('Realtime update:', payload);
+            console.log('Realtime update received:', payload);
             
             // Handle different events
             if (payload.eventType === 'INSERT') {
@@ -81,15 +82,15 @@ const TodoList = () => {
               setTodos(currentTodos => 
                 currentTodos.filter(todo => todo.id !== deletedTodo.id)
               );
-            } else {
-              // Fallback to refetching all todos if we cannot handle the event
-              fetchTodos();
             }
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Realtime subscription status:', status);
+        });
 
       return () => {
+        console.log('Unsubscribing from realtime channel');
         supabase.removeChannel(channel);
       };
     }
@@ -114,6 +115,7 @@ const TodoList = () => {
           title: "Failed to add task",
           description: error.message,
           variant: "destructive",
+          duration: 3000,
         });
         return;
       }
@@ -121,7 +123,8 @@ const TodoList = () => {
       setNewTask("");
       toast({
         title: "Task added",
-        description: "Your new task has been added to the list."
+        description: "Your new task has been added to the list.",
+        duration: 3000,
       });
     } catch (error) {
       console.error("Error adding todo:", error);
@@ -129,22 +132,38 @@ const TodoList = () => {
         title: "Error",
         description: "Failed to add task. Please try again.",
         variant: "destructive",
+        duration: 3000,
       });
     }
   };
 
   const toggleComplete = async (id: string, currentStatus: boolean) => {
     try {
+      // Optimistically update the UI
+      setTodos(currentTodos => 
+        currentTodos.map(todo => 
+          todo.id === id ? { ...todo, completed: !currentStatus } : todo
+        )
+      );
+      
       const { error } = await supabase
         .from('todos')
         .update({ completed: !currentStatus })
         .eq('id', id);
 
       if (error) {
+        // Revert the optimistic update if there was an error
+        setTodos(currentTodos => 
+          currentTodos.map(todo => 
+            todo.id === id ? { ...todo, completed: currentStatus } : todo
+          )
+        );
+        
         toast({
           title: "Error updating task",
           description: error.message,
           variant: "destructive",
+          duration: 3000,
         });
         return;
       }
@@ -154,29 +173,41 @@ const TodoList = () => {
         title: "Error",
         description: "Failed to update task. Please try again.",
         variant: "destructive",
+        duration: 3000,
       });
     }
   };
 
   const deleteTodo = async (id: string) => {
     try {
+      // Optimistically update the UI
+      const todoToDelete = todos.find(todo => todo.id === id);
+      setTodos(currentTodos => currentTodos.filter(todo => todo.id !== id));
+      
       const { error } = await supabase
         .from('todos')
         .delete()
         .eq('id', id);
 
       if (error) {
+        // Revert the optimistic update if there was an error
+        if (todoToDelete) {
+          setTodos(currentTodos => [...currentTodos, todoToDelete]);
+        }
+        
         toast({
           title: "Error deleting task",
           description: error.message,
           variant: "destructive",
+          duration: 3000,
         });
         return;
       }
 
       toast({
         title: "Task deleted",
-        description: "The task has been removed from your list."
+        description: "The task has been removed from your list.",
+        duration: 3000,
       });
     } catch (error) {
       console.error("Error deleting todo:", error);
@@ -184,6 +215,7 @@ const TodoList = () => {
         title: "Error",
         description: "Failed to delete task. Please try again.",
         variant: "destructive",
+        duration: 3000,
       });
     }
   };
@@ -196,6 +228,13 @@ const TodoList = () => {
     if (!editTask || !editTask.task.trim()) return;
     
     try {
+      // Optimistically update the UI
+      setTodos(currentTodos => 
+        currentTodos.map(todo => 
+          todo.id === editTask.id ? { ...todo, task: editTask.task.trim() } : todo
+        )
+      );
+      
       const { error } = await supabase
         .from('todos')
         .update({ task: editTask.task.trim() })
@@ -206,6 +245,7 @@ const TodoList = () => {
           title: "Error updating task",
           description: error.message,
           variant: "destructive",
+          duration: 3000,
         });
         return;
       }
@@ -213,7 +253,8 @@ const TodoList = () => {
       setEditTask(null);
       toast({
         title: "Task updated",
-        description: "Your task has been updated successfully."
+        description: "Your task has been updated successfully.",
+        duration: 3000,
       });
     } catch (error) {
       console.error("Error updating todo:", error);
@@ -221,6 +262,7 @@ const TodoList = () => {
         title: "Error",
         description: "Failed to update task. Please try again.",
         variant: "destructive",
+        duration: 3000,
       });
     }
   };

@@ -1,7 +1,9 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+
 const Navigation = () => {
   const {
     isAuthenticated,
@@ -17,6 +19,7 @@ const Navigation = () => {
 
   // Get display name from profile or fallback to email
   const displayName = profile?.name || user?.email?.split('@')[0] || "User";
+  
   return <header className="border-b py-4">
       <div className="container flex items-center justify-between">
         <Link to="/" className="flex items-center">
@@ -38,6 +41,9 @@ const Navigation = () => {
           {isAuthenticated ? <>
               <Link to="/dashboard" className={`text-sm font-medium ${location.pathname === "/dashboard" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 Dashboard
+              </Link>
+              <Link to="/settings" className={`text-sm font-medium ${location.pathname === "/settings" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                Settings
               </Link>
               <div className="flex items-center space-x-4">
                 <span className="text-sm font-medium">
@@ -66,6 +72,9 @@ const Navigation = () => {
               {isAuthenticated ? <>
                   <Link to="/dashboard" className={`text-lg font-medium ${location.pathname === "/dashboard" ? "text-foreground" : "text-muted-foreground"}`} onClick={() => setMobileMenuOpen(false)}>
                     Dashboard
+                  </Link>
+                  <Link to="/settings" className={`text-lg font-medium ${location.pathname === "/settings" ? "text-foreground" : "text-muted-foreground"}`} onClick={() => setMobileMenuOpen(false)}>
+                    Settings
                   </Link>
                   <div className="flex flex-col space-y-4 pt-4 border-t">
                     <span className="text-muted-foreground">
