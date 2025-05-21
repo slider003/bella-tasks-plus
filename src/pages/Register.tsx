@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -59,7 +59,7 @@ const Register = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <Alert className="bg-blue-50 border-blue-200">
-            <InfoCircle className="h-4 w-4 text-blue-500" />
+            <Info className="h-4 w-4 text-blue-500" />
             <AlertTitle>Verify your email address</AlertTitle>
             <AlertDescription>
               We've sent a verification email to <strong>{email}</strong>. Please check your inbox and click the verification link to complete your registration.
