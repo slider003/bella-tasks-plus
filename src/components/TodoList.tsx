@@ -106,11 +106,26 @@ const TodoList = () => {
         completed: false
       };
 
-      const { error } = await supabase
+      // Optimistically update the UI
+      const optimisticTodo = {
+        ...newTodo,
+        id: `temp-${Date.now()}`,
+        created_at: new Date().toISOString()
+      } as Todo;
+      
+      setTodos(prevTodos => [optimisticTodo, ...prevTodos]);
+      setNewTask("");
+
+      const { error, data } = await supabase
         .from('todos')
-        .insert(newTodo);
+        .insert(newTodo)
+        .select()
+        .single();
 
       if (error) {
+        // Remove the optimistic todo if there's an error
+        setTodos(prevTodos => prevTodos.filter(todo => todo.id !== optimisticTodo.id));
+        
         toast({
           title: "Failed to add task",
           description: error.message,
@@ -120,7 +135,13 @@ const TodoList = () => {
         return;
       }
 
-      setNewTask("");
+      // Replace the optimistic todo with the real one from the server
+      if (data) {
+        setTodos(prevTodos => prevTodos.map(todo => 
+          todo.id === optimisticTodo.id ? data : todo
+        ));
+      }
+
       toast({
         title: "Task added",
         description: "Your new task has been added to the list.",
@@ -148,7 +169,7 @@ const TodoList = () => {
       
       const { error } = await supabase
         .from('todos')
-        .update({ completed: !currentStatus })
+        .update({ completed: !currentStatus, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) {
@@ -237,7 +258,7 @@ const TodoList = () => {
       
       const { error } = await supabase
         .from('todos')
-        .update({ task: editTask.task.trim() })
+        .update({ task: editTask.task.trim(), updated_at: new Date().toISOString() })
         .eq('id', editTask.id);
 
       if (error) {

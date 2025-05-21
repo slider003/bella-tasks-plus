@@ -15,62 +15,80 @@ const Dashboard = () => {
     addedThisWeek: 0
   });
 
-  useEffect(() => {
-    const fetchTodoStats = async () => {
-      if (!user) return;
+  const fetchTodoStats = async () => {
+    if (!user) return;
 
-      try {
-        // Get todos completed today
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayISOString = today.toISOString();
-        
-        const { data: completedTodayData, error: completedTodayError } = await supabase
-          .from('todos')
-          .select('count')
-          .eq('user_id', user.id)
-          .eq('completed', true)
-          .gte('updated_at', todayISOString);
-        
-        // Get todos in progress
-        const { data: inProgressData, error: inProgressError } = await supabase
-          .from('todos')
-          .select('count')
-          .eq('user_id', user.id)
-          .eq('completed', false);
-        
-        // Get todos added this week
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const oneWeekAgoISOString = oneWeekAgo.toISOString();
-        
-        const { data: addedThisWeekData, error: addedThisWeekError } = await supabase
-          .from('todos')
-          .select('count')
-          .eq('user_id', user.id)
-          .gte('created_at', oneWeekAgoISOString);
-        
-        if (completedTodayError || inProgressError || addedThisWeekError) {
-          console.error("Error fetching todo stats:", { 
-            completedTodayError, 
-            inProgressError, 
-            addedThisWeekError 
-          });
-          return;
-        }
-        
-        setStats({
-          completedToday: completedTodayData?.[0]?.count || 0,
-          inProgress: inProgressData?.[0]?.count || 0,
-          addedThisWeek: addedThisWeekData?.[0]?.count || 0
+    try {
+      // Get todos completed today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISOString = today.toISOString();
+      
+      const { data: completedTodayData, error: completedTodayError } = await supabase
+        .from('todos')
+        .select('count')
+        .eq('user_id', user.id)
+        .eq('completed', true)
+        .gte('updated_at', todayISOString);
+      
+      // Get todos in progress
+      const { data: inProgressData, error: inProgressError } = await supabase
+        .from('todos')
+        .select('count')
+        .eq('user_id', user.id)
+        .eq('completed', false);
+      
+      // Get todos added this week
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const oneWeekAgoISOString = oneWeekAgo.toISOString();
+      
+      const { data: addedThisWeekData, error: addedThisWeekError } = await supabase
+        .from('todos')
+        .select('count')
+        .eq('user_id', user.id)
+        .gte('created_at', oneWeekAgoISOString);
+      
+      if (completedTodayError || inProgressError || addedThisWeekError) {
+        console.error("Error fetching todo stats:", { 
+          completedTodayError, 
+          inProgressError, 
+          addedThisWeekError 
         });
-        
-      } catch (error) {
-        console.error("Failed to fetch todo statistics:", error);
+        return;
       }
-    };
+      
+      setStats({
+        completedToday: completedTodayData?.[0]?.count || 0,
+        inProgress: inProgressData?.[0]?.count || 0,
+        addedThisWeek: addedThisWeekData?.[0]?.count || 0
+      });
+      
+    } catch (error) {
+      console.error("Failed to fetch todo statistics:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchTodoStats();
+    
+    // Set up realtime subscription for stats updates
+    if (user) {
+      const channel = supabase
+        .channel('todos-stats-changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'todos', filter: `user_id=eq.${user.id}` },
+          () => {
+            // Refresh stats when any todo changes
+            fetchTodoStats();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user]);
 
   return (
