@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import Footer from "@/components/Footer";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -225,6 +225,7 @@ const Register = () => {
           </p>
         </CardFooter>
       </form>
+      <Footer />
     </Card>
   );
 };
