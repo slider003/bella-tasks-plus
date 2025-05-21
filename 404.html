@@ -1,0 +1,21 @@
+/*
+  GitHub Pages 404 fallback for client-side routing (SPA)
+  This file will be copied to /404.html on build for Vite/React Router support
+*/
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="refresh" content="0; url=/bella-tasks-plus/" />
+    <script>
+      // If JS is enabled, redirect to the root with the correct hash
+      var l = window.location;
+      var repo = '/bella-tasks-plus';
+      var path = l.pathname.replace(repo, '');
+      window.location.replace(repo + '/#' + path + l.search + l.hash);
+    </script>
+  </head>
+  <body>
+    <h1>Redirecting...</h1>
+    <p>If you are not redirected, <a href="/bella-tasks-plus/">click here</a>.</p>
+  </body>
+</html>
