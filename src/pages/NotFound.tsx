@@ -1,7 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const NotFound = () => {
   return (
@@ -22,12 +22,7 @@ const NotFound = () => {
           </Link>
         </div>
       </main>
-      
-      <footer className="py-6 border-t">
-        <div className="container text-center text-muted-foreground text-sm">
-          &copy; {new Date().getFullYear()} Elegant Tasks. All rights reserved.
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

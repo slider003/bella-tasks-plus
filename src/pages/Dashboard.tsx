@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
@@ -6,6 +5,7 @@ import TodoList from "@/components/TodoList";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import Footer from "@/components/Footer";
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -130,12 +130,7 @@ const Dashboard = () => {
           <TodoList />
         </div>
       </main>
-      
-      <footer className="py-6 border-t mt-8">
-        <div className="container text-center text-muted-foreground text-sm">
-          &copy; {new Date().getFullYear()} Elegant Tasks. All rights reserved.
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
