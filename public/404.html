@@ -3,17 +3,17 @@
   <head>
     <meta charset="utf-8">
     <title>Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=/">
+    <meta http-equiv="refresh" content="0; url=/bella-tasks-plus/" />
     <script>
-      // For GitHub Pages: redirect all 404s to index.html for SPA routing
-      var redirectTo = '/';
-      if (window.location.pathname !== '/') {
-        redirectTo = '/#' + window.location.pathname + window.location.search + window.location.hash;
-      }
-      window.location.replace(redirectTo);
+      // If JS is enabled, redirect to the root with the correct hash
+      var l = window.location;
+      var repo = '/bella-tasks-plus';
+      var path = l.pathname.replace(repo, '');
+      window.location.replace(repo + '/#' + path + l.search + l.hash);
     </script>
   </head>
   <body>
-    <p>Redirecting...</p>
+    <h1>Redirecting...</h1>
+    <p>If you are not redirected, <a href="/bella-tasks-plus/">click here</a>.</p>
   </body>
 </html>
