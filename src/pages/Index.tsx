@@ -148,7 +148,7 @@ const Index = () => {
         <div className="container">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <h2 className="text-xl font-serif font-medium">Elegant Tasks</h2>
+              <h2 className="text-xl font-serif font-medium">Bella Tasks</h2>
               <p className="text-sm text-muted-foreground">Organize your life elegantly</p>
             </div>
             
